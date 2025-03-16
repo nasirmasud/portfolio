@@ -1,39 +1,111 @@
+// import { getProject } from "@/sanity/sanity-utils";
+// import { PortableText } from "next-sanity";
+// import Image from "next/image";
+
+// type Props = {
+//   params: { project: string };
+// };
+// export default async function Project({ params }: Props) {
+//   const slug = params.project;
+//   const project = await getProject(slug);
+
+//   return (
+//     <div>
+//       <header className='flex justify-between items-center'>
+//         <h1 className='mt-1 font-extrabold bg-gradient-to-r from-purple-700 to-blue-900 bg-clip-text text-transparent text-5xl'>
+//           {project.name}
+//         </h1>
+//         <a
+//           href={project.url}
+//           title='View Project'
+//           target='_blank'
+//           rel='noopener noreferrer'
+//           className='bg-gray-800 rounded-lg text-grey-500 font-bold py-3 px-4 whitespace-nowrap hover:bg-green-600 hover:text-gray-600 transition'
+//         >
+//           View Project
+//         </a>
+//       </header>
+//       {/* content goes here */}
+//       <div className='text-lg text-gray-500 mt-5'>
+//         <PortableText value={project.content} />
+//       </div>
+
+//       {/* image goes here */}
+//       <Image
+//         src={project.image}
+//         alt={project.name}
+//         width={1920}
+//         height={1080}
+//         className='mt-4 border-amber-400 object-cover rounded-xl'
+//       />
+//     </div>
+//   );
+// }
+"use client";
+
 import { getProject } from "@/sanity/sanity-utils";
 import { PortableText } from "next-sanity";
 import Image from "next/image";
+import { use, useEffect, useState } from "react";
 
 type Props = {
-  params: { project: string };
+  params: Promise<{ project: string }>; // params is now a Promise
 };
-export default async function Project({ params }: Props) {
-  const slug = params.project;
-  const project = await getProject(slug);
+
+export default function Project({ params }: Props) {
+  const { project } = use(params); // Unwrap params using use()
+
+  const [data, setData] = useState<{
+    name: string;
+    url: string;
+    content: any;
+    image: string;
+  } | null>(null);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    async function fetchData() {
+      try {
+        const projectData = await getProject(project);
+        setData(projectData);
+      } catch (error) {
+        console.error("Failed to fetch project data:", error);
+      } finally {
+        setLoading(false);
+      }
+    }
+    fetchData();
+  }, [project]);
+
+  if (loading) return <div>Loading...</div>;
+  if (!data) return <div>Project not found.</div>;
 
   return (
     <div>
       <header className='flex justify-between items-center'>
         <h1 className='mt-1 font-extrabold bg-gradient-to-r from-purple-700 to-blue-900 bg-clip-text text-transparent text-5xl'>
-          {project.name}
+          {data.name}
         </h1>
         <a
-          href={project.url}
+          href={data.url}
           title='View Project'
           target='_blank'
           rel='noopener noreferrer'
-          className='bg-gray-800 rounded-lg text-grey-500 font-bold py-3 px-4 whitespace-nowrap hover:bg-green-600 hover:text-gray-600 transition'
+          className='bg-gray-800 rounded-lg text-gray-500 font-bold py-3 px-4 whitespace-nowrap hover:bg-green-600 hover:text-gray-600 transition'
         >
           View Project
         </a>
       </header>
-      {/* content goes here */}
+
+      {/* content */}
       <div className='text-lg text-gray-500 mt-5'>
-        <PortableText value={project.content} />
+        <PortableText value={data.content} />
       </div>
 
-      {/* image goes here */}
+      {/* image */}
       <Image
-        src={project.image}
-        alt={project.name}
+        src={data.image}
+        alt={data.name}
         width={1920}
         height={1080}
         className='mt-4 border-amber-400 object-cover rounded-xl'
