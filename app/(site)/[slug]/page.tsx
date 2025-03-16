@@ -5,13 +5,13 @@ type Props = {
   params: Promise<{ page: string }>; // Changed to Promise
 };
 
-export default async function Project({ params }: Props) {
+export default async function Page({ params }: Props) {
   const { page: slug } = await params; // Await the params promise
 
   if (!slug) {
     return (
       <div>
-        <h1 className='text-5xl'>Error: Missing project parameter</h1>
+        <h1 className='text-5xl'>Error: Missing page parameter</h1>
       </div>
     );
   }
